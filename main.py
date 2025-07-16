@@ -12,12 +12,13 @@ from scipy.io import wavfile
 ## T student test function for peoples
 def t_student_test(file_csv):
     ## estructure of the csv file: archivo,genero,edad
-    df = pd.read_csv(file_csv)
+    df = pd.read_csv(file_csv) # read the csv file
     ## Get the unique values of the 'genero' column
     generos = df['genero'].unique()
     results = {}
     for genero in generos:
         df_genero = df[df['genero'] == genero]
+        ## Perform the t-test for the 'edad' column
         t_stat, p_value = stats.ttest_1samp(df_genero['edad'], df['edad'].mean())
         results[genero] = (t_stat, p_value)
     ## Print the results
@@ -30,14 +31,17 @@ def fourier_transform(audio_data, sample_rate=44100):
     n = len(audio_data)
     fft_vals = np.fft.fft(audio_data)
     fft_vals = np.abs(fft_vals[:n // 2 + 1]) ** 2  # energía y mitad positiva
-    freq = np.fft.fftfreq(n, d=1/sample_rate)[:n // 2 + 1]
+    freq = np.fft.fftfreq(n, d=1/sample_rate)[:n // 2 + 1] 
     return freq, fft_vals
 
+## Mel scale conversion functions
 def hz_to_mel(f):
     return 2595 * np.log10(1 + f / 700)
 
+## Mel to Hz conversion function
 def mel_to_hz(m):
     return 700 * (10**(m / 2595) - 1)
+
 ## create the mel filter bank
 def mel_filter_bank(sample_rate=44100, n_fft=400, n_filters=26):
     f_min = 0
@@ -62,6 +66,7 @@ def mel_filter_bank(sample_rate=44100, n_fft=400, n_filters=26):
             filter_bank[i - 1, j] = (right - j) / (right - center)
     return filter_bank
 
+## Function to apply FFT with windowing and overlap
 def fft_window(audio_data, sample_rate=44100, solape_percente=50, window_ms=25, filter='hamming', filtro_mel=None):
     """
     Plots the FFT of the audio data with windowing and overlap.
@@ -98,6 +103,7 @@ def fft_window(audio_data, sample_rate=44100, solape_percente=50, window_ms=25, 
     vector_medio = np.mean(energy_fft_values, axis=0)   
     return vector_medio
 
+## Function to analyze audio data in a directory
 def analize_data(directory, cut=30):
     audio_files = []
     for filename in os.listdir(directory):
@@ -123,7 +129,7 @@ def analize_data(directory, cut=30):
         names_audios.append(os.path.basename(audio_file))
     return vector_medio_fft_values, names_audios
 
-
+## Function to calculate cosine distance and plot histograms
 def distancia_coseno(audio_claro, vector_medio_fft_values_propio, vector_medio_fft_values_otros):
     ## Comparacion entre mi audio claro y los audios test
     distancias_test_vs_ref = [cosine(v, audio_claro) for v in vector_medio_fft_values_propio]
@@ -152,6 +158,7 @@ def distancia_coseno(audio_claro, vector_medio_fft_values_propio, vector_medio_f
     plt.show()
     return distancias_test_vs_ref, distancias_test_vs_impostores
 
+## Function to perform statistical test
 def Prueba_estadistica(distancias_test_vs_ref, distancias_test_vs_impostores):
     stat, p = mannwhitneyu(distancias_test_vs_ref, distancias_test_vs_impostores)
     print(f"U = {stat:.4f}, p-value = {p:.4f}")
@@ -161,6 +168,7 @@ def Prueba_estadistica(distancias_test_vs_ref, distancias_test_vs_impostores):
     else:
         print("No hay diferencia estadística clara.")
 
+## Function to determine the decision threshold
 def umbral(distancias_test_vs_ref, distancias_test_vs_impostores):
     #promediar las distancias
     max_test = np.mean(distancias_test_vs_ref)
@@ -171,7 +179,6 @@ def umbral(distancias_test_vs_ref, distancias_test_vs_impostores):
 
 
 # Funcion de verificacion final
-
 def verificar_audio(ruta_audio, vector_referencia, umbral=0.2):
     vector, nombre = analize_data(ruta_audio)
     distancias_test_vs_ref = [cosine(v, vector[0]) for v in vector_referencia]
