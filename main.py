@@ -93,8 +93,7 @@ def fft_window(audio_data, sample_rate=44100, solape_percente=50, window_ms=25, 
             break
         windowed = segment * window_func(window_length)
         freq, fft_vals = fourier_transform(windowed, sample_rate)
-        ## calculate the mean values of the FFT
-        n_fft = int(sample_rate * window_ms / 1000)  
+        ## calculate the mean values of the FFT 
         energy_by_band = filtro_mel @ fft_vals
         energy_fft_values.append(energy_by_band)        
     energy_fft_values = np.array(energy_fft_values)
